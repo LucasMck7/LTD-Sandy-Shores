@@ -80,7 +80,7 @@ case 'save_order_particulier':
         ];
         try {
             $ch2 = curl_init('http://72.62.181.67:3001/notify');
-            curl_setopt_array($ch2,[CURLOPT_POST=>true,CURLOPT_POSTFIELDS=>json_encode($notifyData),CURLOPT_RETURNTRANSFER=>true,CURLOPT_TIMEOUT=>3,CURLOPT_HTTPHEADER=>['Content-Type: application/json','X-Bot-Secret: LTDSandyShores2025xK9pZm3qR77']]);
+            curl_setopt_array($ch2,[CURLOPT_POST=>true,CURLOPT_POSTFIELDS=>json_encode($notifyData),CURLOPT_RETURNTRANSFER=>true,CURLOPT_TIMEOUT=>3,CURLOPT_HTTPHEADER=>['Content-Type: application/json','X-Bot-Secret: '.API_SECRET]]);
             curl_exec($ch2); curl_close($ch2);
         } catch(Exception $ne){}
         jsonResponse(['success'=>true,'ref'=>$ref,'id'=>$orderId]);
@@ -986,14 +986,12 @@ case 'emp_factures_classement':
             checkSecret();
             $discord = $body['discord_id'] ?? '';
             $since   = $body['since'] ?? '2000-01-01';
-            $where   = $discord ? "WHERE emetteur_discord='$discord' AND date_facture>='$since'" : "WHERE date_facture>='$since'";
-            $stats = $pdo->query("SELECT 
-                COUNT(*) as nb_factures,
-                SUM(montant) as ca_total,
-                AVG(montant) as ca_moyen,
-                MAX(montant) as max_facture,
-                MIN(montant) as min_facture
-                FROM emp_factures $where")->fetch();
+            $sql = $discord
+                ? "SELECT COUNT(*) as nb_factures, SUM(montant) as ca_total, AVG(montant) as ca_moyen, MAX(montant) as max_facture, MIN(montant) as min_facture FROM emp_factures WHERE emetteur_discord=? AND date_facture>=?"
+                : "SELECT COUNT(*) as nb_factures, SUM(montant) as ca_total, AVG(montant) as ca_moyen, MAX(montant) as max_facture, MIN(montant) as min_facture FROM emp_factures WHERE date_facture>=?";
+            $stmt = $pdo->prepare($sql);
+            $discord ? $stmt->execute([$discord, $since]) : $stmt->execute([$since]);
+            $stats = $stmt->fetch();
             jsonResponse(['success'=>true,'stats'=>$stats]);
             break;
         }
@@ -1006,7 +1004,7 @@ case 'emp_factures_classement':
             if (!in_array($orderBy, $allowed)) $orderBy = 'ca_total';
 
             // Récupérer les stats par employé (émetteur)
-            $rows = $pdo->query("SELECT 
+            $stmt = $pdo->prepare("SELECT
                 emetteur_discord,
                 emetteur_nom,
                 COUNT(*) as nb_factures,
@@ -1014,11 +1012,13 @@ case 'emp_factures_classement':
                 AVG(montant) as ca_moyen,
                 MAX(montant) as max_facture
                 FROM emp_factures
-                WHERE date_facture >= '$since'
+                WHERE date_facture >= ?
                 AND emetteur_discord != ''
                 GROUP BY emetteur_discord, emetteur_nom
                 ORDER BY $orderBy DESC
-                LIMIT 50")->fetchAll();
+                LIMIT 50");
+            $stmt->execute([$since]);
+            $rows = $stmt->fetchAll();
 
             // Enrichir avec données de service (sessions + heures)
             $result = [];
@@ -1173,13 +1173,15 @@ case 'bot_get_classement':
         $pdo = getDB();
         $periode = $body['periode'] ?? 'week';
         $since = ['week'=>date('Y-m-d',strtotime('-7 days')),'month'=>date('Y-m-01'),'all'=>'2000-01-01'][$periode] ?? date('Y-m-01');
-        $rows = $pdo->query("SELECT login_id, prenom, nom, poste,
+        $stmt = $pdo->prepare("SELECT login_id, prenom, nom, poste,
             SUM(GREATEST(0, ca_fin - ca_debut)) AS ca_total,
             COUNT(*) AS sessions
             FROM emp_service
-            WHERE actif=0 AND fin IS NOT NULL AND debut >= '$since'
+            WHERE actif=0 AND fin IS NOT NULL AND debut >= ?
             GROUP BY login_id, prenom, nom, poste
-            ORDER BY ca_total DESC LIMIT 10")->fetchAll();
+            ORDER BY ca_total DESC LIMIT 10");
+        $stmt->execute([$since]);
+        $rows = $stmt->fetchAll();
         jsonResponse(['success'=>true,'classement'=>$rows]);
     } catch(PDOException $e){ jsonResponse(['success'=>false,'error'=>$e->getMessage()],500); }
     break;
@@ -1273,7 +1275,7 @@ case 'bot_control':
     try {
         $action = $body['action'] ?? '';
         $port   = getenv('BOT_NOTIFY_PORT') ?: '3001';
-        $secret = 'LTDSandyShores2025xK9pZm3qR77';
+        $secret = API_SECRET;
         $url    = 'http://72.62.181.67:'.$port.'/'.ltrim($body['endpoint'] ?? $action, '/');
         $method = in_array($action, ['restart','stop','notify']) ? 'POST' : 'GET';
         $ch = curl_init($url);
@@ -1299,7 +1301,7 @@ case 'bot_get_members':
     checkSecret();
     try {
         $port   = getenv('BOT_NOTIFY_PORT') ?: '3001';
-        $secret = 'LTDSandyShores2025xK9pZm3qR77';
+        $secret = API_SECRET;
         $ch = curl_init('http://72.62.181.67:'.$port.'/members');
         curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER=>true,CURLOPT_TIMEOUT=>10,CURLOPT_HTTPHEADER=>['X-Bot-Secret: '.$secret]]);
         $resp = curl_exec($ch); curl_close($ch);
@@ -1782,7 +1784,7 @@ case 'bot_deactivate_employe':
 case 'bot_notify':
     try {
         $data = $body;
-        $botSecret = getenv('LTD_API_SECRET') ?: 'LTDSandyShores2025xK9pZm3qR77';
+        $botSecret = API_SECRET;
         $notifyPort = getenv('BOT_NOTIFY_PORT') ?: '3001';
         $url = 'http://72.62.181.67:'.$notifyPort.'/notify';
         // Appel HTTP local vers le bot

@@ -80,14 +80,10 @@ async function handleFacturesEmployes(message) {
 
   // ── Édition d'une facture déjà connue ──
   if (existingId) {
-    // Supprimer la réaction ⏳
-    try {
-      const reaction = message.reactions.cache.get('⏳');
-      if (reaction) await reaction.users.remove(message.client.user.id).catch(()=>{});
-    } catch(e) {}
+    // Supprimer toutes les réactions avant d'en ajouter une nouvelle
+    try { await message.reactions.removeAll(); } catch(e) {}
 
-    // Ajouter la nouvelle réaction
-    await message.react(isPaid ? '✅' : '❌').catch(()=>{});
+    await message.react(isPaid ? '✅' : isCanceled ? '❌' : '⏳').catch(()=>{});
 
     // Éditer le message de confirmation
     if (ch) {

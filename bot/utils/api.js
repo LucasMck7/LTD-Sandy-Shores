@@ -5,14 +5,14 @@ const API_SECRET = process.env.API_SECRET;
 async function apiGet(action) {
   const r = await fetch(`${API_URL}?action=${action}`);
   if (!r.ok) throw new Error(`API ${action} HTTP ${r.status}`);
-  return r.json();
+  try { return await r.json(); } catch { throw new Error(`API ${action} réponse invalide`); }
 }
 async function apiPost(action, data, auth=false) {
   const headers = { 'Content-Type':'application/json' };
   if (auth) headers['X-API-Secret'] = API_SECRET;
   const r = await fetch(`${API_URL}?action=${action}`, { method:'POST', headers, body:JSON.stringify(data) });
   if (!r.ok) throw new Error(`API ${action} HTTP ${r.status}`);
-  return r.json();
+  try { return await r.json(); } catch { throw new Error(`API ${action} réponse invalide`); }
 }
 async function getServiceActif() {
   try { const r=await apiGet('get_service_actif'); return r.success?(r.vendeurs||[]): []; } catch { return []; }

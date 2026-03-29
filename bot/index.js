@@ -90,8 +90,10 @@ client.on(Events.MessageUpdate, async (oldMsg, newMsg) => {
 });
 
 client.on(Events.GuildMemberUpdate, async (oldMember, newMember) => {
-  await onRoleAdd(oldMember, newMember, client);
-  await onRoleRemove(oldMember, newMember, client);
+  const addedRoles   = newMember.roles.cache.filter(r => !oldMember.roles.cache.has(r.id));
+  const removedRoles = oldMember.roles.cache.filter(r => !newMember.roles.cache.has(r.id));
+  for (const [roleId] of addedRoles)   await onRoleAdd(newMember, roleId);
+  for (const [roleId] of removedRoles) await onRoleRemove(newMember, roleId);
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {
