@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LTD Sandy Shores</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rye&family=Oswald:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Playfair+Display:ital,wght@1,900&display=swap">
+<style>
+:root{--gold:#E8C96A;--gold2:#C9A84C;--gold3:#A07820;--red:#C0180C;--bg:#080503;--bg2:#100807;--cream:#F0DEB0;--tan:#9A7840;--border:rgba(160,120,32,.2);--rye:'Rye',serif;--osw:'Oswald',sans-serif;--cor:'Cormorant Garamond',serif}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:var(--osw);background:var(--bg);color:var(--cream);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+.bg-layer{position:fixed;inset:0;z-index:0;pointer-events:none}
+.bg-gradient{
+  background:
+    radial-gradient(ellipse 85% 65% at 50% -8%,rgba(139,26,10,.38),transparent 62%),
+    radial-gradient(ellipse 55% 45% at 4% 110%,rgba(160,120,32,.2),transparent 55%),
+    radial-gradient(ellipse 40% 40% at 90% 20%,rgba(120,30,8,.15),transparent 50%),
+    linear-gradient(160deg,#060402 0%,#0e0704 45%,#060402 100%);
+  /* animation:bgBreathe désactivée — cause fondu sur mobile */
+}
+/* Texture western grain */
+.bg-grain{
+  position:absolute;inset:0;pointer-events:none;
+  opacity:.045;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode:overlay;
+}
+/* Particules braises */
+.ember{
+  position:absolute;border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle,rgba(200,100,20,.8),transparent 70%);
+  animation:emberFloat var(--dur,12s) ease-in-out infinite var(--del,0s);
+  filter:blur(1px);
+}
+@keyframes emberFloat{
+  0%{transform:translateY(0) translateX(0) scale(1);opacity:0}
+  10%{opacity:1}
+  50%{transform:translateY(calc(var(--ty,-200px))) translateX(calc(var(--tx,30px))) scale(.7)}
+  90%{opacity:.4}
+  100%{transform:translateY(calc(var(--ty,-400px))) translateX(calc(var(--tx2,60px))) scale(.3);opacity:0}
+}
+@keyframes bgBreathe{0%,100%{opacity:1}50%{opacity:.82}}
+.bg-grid{background-image:linear-gradient(rgba(160,120,32,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(160,120,32,.03) 1px,transparent 1px);background-size:56px 56px;animation:gridDrift 28s linear infinite}
+@keyframes gridDrift{from{background-position:0 0}to{background-position:56px 56px}}
+.bg-vignette{box-shadow:inset 0 0 120px rgba(0,0,0,.55),inset 0 0 250px rgba(139,26,10,.07)}
+.bg-stars{overflow:hidden}
+.star{position:absolute;border-radius:50%;background:rgba(232,201,106,.65);animation:twinkle var(--d,3s) ease-in-out infinite var(--dl,0s)}
+@keyframes twinkle{0%,100%{opacity:.06;transform:scale(1)}50%{opacity:.72;transform:scale(1.9)}}
+.particle{position:fixed;border-radius:50%;pointer-events:none;background:radial-gradient(circle,rgba(200,169,76,.22),transparent 70%);animation:floatUp var(--dur,15s) ease-in-out infinite var(--del,0s)}
+@keyframes floatUp{0%{transform:translateY(110vh) scale(0);opacity:0}7%{opacity:.85}88%{opacity:.14}100%{transform:translateY(-12vh) scale(2.8);opacity:0}}
+.pt-inner{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:.75rem;pointer-events:none;opacity:0}
+#page-transition.go .pt-inner{opacity:1;transition:opacity .2s}
+#page-transition.out .pt-inner{opacity:0;transition:opacity .45s}
+.pt-logo{width:52px;height:52px;border-radius:50%;border:2px solid var(--gold2);object-fit:cover}
+.pt-bar{width:120px;height:2px;background:rgba(160,120,32,.2);border-radius:1px;overflow:hidden;margin-top:.5rem}
+.pt-bar::after{content:'';display:block;height:100%;width:0;background:var(--gold);animation:ptBar 1.4s ease forwards}
+@keyframes ptBar{to{width:100%}}
+#toast-wrap{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);z-index:8000;display:flex;flex-direction:column;gap:.5rem;align-items:center;pointer-events:none}
+.toast{padding:.55rem 1.1rem;border-radius:5px;font-size:.75rem;font-family:var(--osw);letter-spacing:.5px;opacity:0;transform:translateY(8px);transition:all .3s;pointer-events:auto;background:rgba(40,20,5,.97);border:1px solid var(--border);color:var(--cream)}
+.toast.show{opacity:1;transform:none}
+
+/* ═══ STA-CARD partagé ═══ */
+.sta-card{background:linear-gradient(160deg,rgba(18,8,2,.95),rgba(8,4,1,.99));border:1px solid rgba(160,120,32,.16);border-radius:9px;overflow:hidden;transition:border-color .25s}
+.sta-card:hover{border-color:rgba(200,169,76,.35)}
+.sta-thumb{width:100%;height:90px;overflow:hidden;position:relative;background:rgba(10,5,2,.8)}
+.sta-thumb img{width:100%;height:100%;object-fit:cover;opacity:.82}
+.sta-thumb-placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:2rem;opacity:.3}
+.sta-pct-badge{position:absolute;top:.35rem;right:.35rem;font-size:.48rem;font-weight:700;letter-spacing:1px;padding:.13rem .38rem;border-radius:3px;text-transform:uppercase}
+.sta-pct-ok{background:rgba(22,163,74,.9);color:#fff}
+.sta-pct-mid{background:rgba(217,119,6,.9);color:#fff}
+.sta-pct-low{background:rgba(192,24,12,.9);color:#fff}
+.sta-body{padding:.6rem .7rem .65rem}
+.sta-name{font-size:.68rem;font-weight:600;color:var(--gold2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:.28rem}
+.sta-bar-wrap{height:3px;background:rgba(255,255,255,.06);border-radius:2px;margin-bottom:.32rem;overflow:hidden}
+.sta-bar{height:3px;border-radius:2px;transition:width .7s ease}
+.sta-meta{font-size:.53rem;color:rgba(154,120,64,.8);line-height:1.6}
+.sta-meta strong{color:rgba(240,222,176,.85)}
+.sta-prix{color:rgba(200,169,76,.9);font-weight:600}
+.sta-loading,.sta-err{text-align:center;color:rgba(154,120,64,.5);font-size:.68rem;padding:1rem;letter-spacing:1px}
+
+/* ══════════════════════════════════════
+   MODE PC (> 640px)
+══════════════════════════════════════ */
+.pc-view{display:block;position:relative;z-index:10}
+.mobile-view{display:none}
+
+.pc-header{display:flex;align-items:center;justify-content:space-between;padding:1.6rem 4rem;border-bottom:1px solid rgba(160,120,32,.1)}
+/* ── MODAL VENDEUR ── */
+.vend-modal-overlay{position:fixed;inset:0;z-index:2000;background:rgba(4,2,1,.88);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:1rem}
+.vend-modal-overlay.open{display:flex;animation:fadeIn .25s ease}
+.vend-modal-box{background:linear-gradient(160deg,rgba(22,10,2,.99),rgba(8,4,1,.99));border:1px solid rgba(160,120,32,.3);border-radius:12px;width:min(380px,92vw);overflow:hidden;animation:popIn .3s cubic-bezier(.34,1.2,.64,1)}
+.vend-modal-header{padding:1.6rem 1.6rem 1rem;display:flex;align-items:center;gap:1.2rem}
+.vend-modal-avatar{width:72px;height:72px;border-radius:50%;object-fit:cover;border:2px solid rgba(200,169,76,.4);flex-shrink:0}
+.vend-modal-avatar-ph{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,rgba(160,120,32,.5),rgba(80,55,12,.8));border:2px solid rgba(200,169,76,.4);display:flex;align-items:center;justify-content:center;font-family:'Rye',serif;font-size:1.4rem;color:var(--gold);flex-shrink:0}
+.vend-modal-info{flex:1}
+.vend-modal-name{font-family:'Rye',serif;font-size:1.1rem;color:var(--gold);line-height:1.2}
+.vend-modal-poste{font-size:.6rem;letter-spacing:2px;text-transform:uppercase;color:rgba(154,120,64,.7);margin-top:.2rem}
+.vend-modal-body{padding:.2rem 1.6rem 1.6rem;border-top:1px solid rgba(160,120,32,.1)}
+.vend-modal-stat{display:flex;align-items:center;gap:.6rem;padding:.55rem 0;border-bottom:1px solid rgba(160,120,32,.06);font-size:.78rem}
+.vend-modal-stat-label{color:rgba(154,120,64,.6);font-size:.6rem;letter-spacing:1px;text-transform:uppercase;min-width:80px}
+.vend-modal-stat-val{color:var(--cream)}
+.vend-modal-bio{font-size:.72rem;color:rgba(240,222,176,.6);font-style:italic;padding:.6rem 0;border-bottom:1px solid rgba(160,120,32,.06)}
+.vend-modal-close{float:right;background:none;border:none;color:rgba(154,120,64,.5);font-size:1.2rem;cursor:pointer;padding:.2rem .5rem;margin-top:-.2rem}
+.vend-modal-close:hover{color:var(--cream)}
+.vend-modal-status{display:inline-flex;align-items:center;gap:.4rem;font-size:.65rem;padding:.2rem .6rem;border-radius:10px;margin-top:.4rem;background:rgba(22,163,74,.1);border:1px solid rgba(22,163,74,.3);color:#4ade80}
+/* sb-vendeur cliquable */
+.sb-vendeur{cursor:pointer;transition:all .2s}
+.sb-vendeur:hover{background:rgba(160,120,32,.18)!important;border-color:rgba(200,169,76,.4)!important;transform:translateY(-1px)}
+
+/* ── BANDEAU SERVICE LIVE ── */
+#service-banner{
+  position:fixed;bottom:0;left:0;right:0;z-index:900;
+  background:linear-gradient(135deg,rgba(8,4,1,.98),rgba(14,7,2,.98));
+  border-top:1px solid rgba(160,120,32,.3);
+  backdrop-filter:blur(16px);
+  padding:1.1rem 2.5rem;
+  display:flex;align-items:center;gap:1.8rem;
+  transform:translateY(100%);
+  transition:transform .4s cubic-bezier(.34,1.1,.64,1);
+}
+#service-banner.visible{transform:translateY(0)}
+.sb-label{
+  font-size:.68rem;letter-spacing:2.5px;text-transform:uppercase;
+  color:rgba(200,169,76,.7);white-space:nowrap;flex-shrink:0;
+}
+.sb-dot{
+  width:12px;height:12px;border-radius:50%;background:#4ade80;
+  box-shadow:0 0 12px #4ade80;flex-shrink:0;
+  animation:pulseDot 1.5s ease-in-out infinite;
+}
+@keyframes pulseDot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.65)}}
+.sb-vendeurs{display:flex;align-items:center;gap:1rem;flex:1;overflow:hidden}
+.sb-vendeur{
+  display:flex;align-items:center;gap:.75rem;
+  background:rgba(160,120,32,.11);border:1px solid rgba(160,120,32,.25);
+  border-radius:28px;padding:.55rem 1.1rem .55rem .5rem;
+  flex-shrink:0;
+}
+.sb-avatar{
+  width:38px;height:38px;border-radius:50%;
+  background:linear-gradient(135deg,rgba(160,120,32,.5),rgba(80,55,12,.8));
+  border:2px solid rgba(200,169,76,.45);
+  display:flex;align-items:center;justify-content:center;
+  font-size:.7rem;font-weight:700;color:var(--gold);letter-spacing:0;
+  flex-shrink:0;font-family:Oswald,sans-serif;
+}
+.sb-info{display:flex;flex-direction:column;gap:.1rem}
+.sb-nom{font-size:.92rem;color:var(--cream);font-family:Oswald,sans-serif;font-weight:500;letter-spacing:.5px;line-height:1.2}
+.sb-station{font-size:.72rem;color:rgba(200,169,76,.7);letter-spacing:.5px;line-height:1.2}
+.sb-none{font-size:.78rem;color:rgba(154,120,64,.4);font-style:italic;letter-spacing:.5px}
+/* Mobile bandeau */
+@media(max-width:640px){
+  #service-banner{padding:.6rem 1rem;gap:.8rem}
+  .sb-label{display:none}
+  .sb-vendeur{padding:.3rem .7rem .3rem .3rem}
+  .sb-nom{font-size:.75rem}
+  .sb-station{font-size:.62rem}
+}
+.pc-logo-wrap{display:flex;align-items:center;gap:.9rem}
+.pc-logo{width:42px;height:42px;border-radius:50%;border:1px solid rgba(200,169,76,.3);object-fit:cover}
+.pc-brand-name{font-family:var(--rye);font-size:1.05rem;color:var(--gold);letter-spacing:1px}
+.pc-brand-tag{font-size:.55rem;color:var(--tan);letter-spacing:2px;text-transform:uppercase;margin-top:.1rem}
+.pc-nav{display:flex;align-items:center;gap:.3rem}
+.pc-nav-btn{background:none;border:none;color:var(--tan);font-family:var(--osw);font-size:.62rem;letter-spacing:1.5px;text-transform:uppercase;padding:.38rem .8rem;border-radius:3px;cursor:pointer;transition:all .2s;text-decoration:none;display:inline-block}
+.pc-nav-btn:hover{color:var(--gold);background:rgba(200,169,76,.07)}
+.pc-nav-sep{width:1px;height:12px;background:rgba(160,120,32,.2);margin:0 .15rem}
+.pc-admin-btn{background:rgba(160,120,32,.08);border:1px solid rgba(160,120,32,.22);color:rgba(154,120,64,.8);font-family:var(--osw);font-size:.58rem;letter-spacing:1.5px;text-transform:uppercase;padding:.35rem .85rem;border-radius:3px;cursor:pointer;transition:all .2s}
+.pc-admin-btn:hover{color:var(--gold);border-color:rgba(200,169,76,.4);background:rgba(160,120,32,.14)}
+
+.pc-hero{text-align:center;padding:5rem 2rem 3.5rem}
+.pc-hero-eyebrow{font-size:.58rem;letter-spacing:4px;text-transform:uppercase;color:rgba(200,169,76,.45);margin-bottom:1.2rem}
+.pc-hero-title{font-family:'Playfair Display',serif;font-style:italic;font-weight:900;font-size:clamp(2.8rem,5.8vw,4.8rem);color:var(--cream);line-height:1.08;margin-bottom:.9rem;text-shadow:0 4px 40px rgba(0,0,0,.6);letter-spacing:.5px}
+.pc-hero-title span{color:var(--gold)}
+.pc-hero-sub{font-family:var(--cor);font-style:italic;font-size:clamp(.95rem,1.8vw,1.25rem);color:var(--tan);font-weight:300;letter-spacing:.5px;margin-bottom:2.5rem}
+.pc-hero-orn{display:flex;align-items:center;justify-content:center;gap:1rem;opacity:.35}
+.pc-hero-orn-line{width:70px;height:1px;background:linear-gradient(90deg,transparent,var(--gold2))}
+.pc-hero-orn-line.r{background:linear-gradient(90deg,var(--gold2),transparent)}
+.pc-hero-orn-dots{font-size:.48rem;letter-spacing:5px;color:var(--gold)}
+
+.pc-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:1.1rem;max-width:1080px;margin:0 auto;padding:3rem 4rem 0}
+.pc-card{position:relative;overflow:hidden;background:linear-gradient(160deg,rgba(18,8,2,.92),rgba(8,4,1,.98));border:1px solid rgba(160,120,32,.15);border-radius:10px;padding:1.9rem 1.5rem 1.7rem;text-decoration:none;color:inherit;cursor:pointer;transition:all .35s cubic-bezier(.34,1.1,.64,1);display:flex;flex-direction:column;gap:.45rem}
+.pc-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(200,169,76,.06),transparent);opacity:0;transition:opacity .3s}
+.pc-card:hover{border-color:rgba(200,169,76,.45);transform:translateY(-6px);box-shadow:0 20px 50px rgba(0,0,0,.7)}
+.pc-card:hover::before{opacity:1}
+.pc-card-accent{position:absolute;top:0;left:0;right:0;height:2px;opacity:0;transition:opacity .3s}
+.pc-card:hover .pc-card-accent{opacity:1}
+.pc1 .pc-card-accent{background:linear-gradient(90deg,var(--gold3),var(--gold))}
+.pc2 .pc-card-accent{background:linear-gradient(90deg,#1a4a8a,#3a7aff)}
+.pc3 .pc-card-accent{background:linear-gradient(90deg,#1a6a2a,#3acc5a)}
+.pc-card-badge{position:absolute;top:.8rem;right:.8rem;font-size:.46rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:.13rem .45rem;border-radius:2px;border:1px solid}
+.pc1 .pc-card-badge{color:#C9A84C;border-color:rgba(200,169,76,.3);background:rgba(200,169,76,.07)}
+.pc2 .pc-card-badge{color:#82aaff;border-color:rgba(58,122,255,.3);background:rgba(58,122,255,.07)}
+.pc3 .pc-card-badge{color:#6edb8e;border-color:rgba(46,204,80,.3);background:rgba(46,204,80,.07)}
+.pc-card-icon{font-size:2rem;margin-bottom:.5rem;display:block;transition:transform .4s cubic-bezier(.34,1.3,.64,1);transform-origin:center center;will-change:transform}
+.pc-card:hover .pc-card-icon{transform:scale(1.12) rotate(-6deg)}
+.pc-card-title{font-family:var(--rye);font-size:1rem;color:var(--cream);margin-bottom:.25rem}
+.pc-card-desc{font-size:.65rem;color:var(--tan);letter-spacing:.4px;line-height:1.55;flex:1}
+.pc-card-arrow{font-size:1.1rem;color:rgba(255,255,255,.1);align-self:flex-end;margin-top:.4rem;transition:all .35s cubic-bezier(.34,1.56,.64,1)}
+.pc-card:hover .pc-card-arrow{color:var(--gold2);transform:translateX(6px)}
+
+/* ══ SECTION PROMOTIONS ══ */
+.pc-promos{max-width:1080px;margin:0 auto;padding:3rem 4rem 0}
+.pc-promos-title{font-family:var(--rye);font-size:1.15rem;color:var(--gold);margin-bottom:.3rem}
+.pc-promos-sub{font-size:.52rem;letter-spacing:2.5px;text-transform:uppercase;color:rgba(154,120,64,.55);margin-bottom:1.5rem}
+.pc-promo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem}
+.pc-promo-card{position:relative;background:linear-gradient(135deg,rgba(18,8,2,.95),rgba(10,5,1,.98));border:1px solid rgba(160,120,32,.18);border-radius:8px;padding:1.3rem 1.4rem;overflow:hidden;transition:border-color .25s,transform .25s}
+.pc-promo-card:hover{border-color:rgba(200,169,76,.4);transform:translateY(-3px)}
+.pc-promo-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold3),var(--gold),transparent);opacity:.7}
+.pc-promo-badge{display:inline-block;font-size:.44rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gold);border:1px solid rgba(200,169,76,.3);background:rgba(200,169,76,.07);padding:.12rem .5rem;border-radius:2px;margin-bottom:.65rem}
+.pc-promo-emoji{font-size:1.6rem;display:block;margin-bottom:.5rem}
+.pc-promo-name{font-family:var(--rye);font-size:.9rem;color:var(--cream);margin-bottom:.4rem}
+.pc-promo-desc{font-size:.63rem;color:var(--tan);letter-spacing:.3px;line-height:1.55}
+.pc-promo-price{margin-top:.7rem;font-family:var(--osw);font-size:.95rem;color:var(--gold);letter-spacing:1px}
+.pc-promo-price s{color:rgba(154,120,64,.5);font-size:.8rem;margin-right:.4rem}
+.pc-promo-empty{text-align:center;padding:2rem;color:rgba(154,120,64,.35);font-size:.7rem;letter-spacing:1px}
+.pc-promo-produits{margin-top:.7rem;border-top:1px solid rgba(160,120,32,.12);padding-top:.6rem;display:flex;flex-direction:column;gap:.25rem}
+.pc-promo-prod-line{display:flex;align-items:center;gap:.4rem;font-size:.65rem}
+.pc-promo-prod-name{flex:1;color:var(--tan)}
+.pc-promo-prod-qty{color:rgba(154,120,64,.6);white-space:nowrap}
+.pc-promo-prod-price{color:var(--gold2);font-weight:600;white-space:nowrap}
+.pc-promo-prod-price s{color:rgba(154,120,64,.5);font-weight:400;margin-right:.25rem}
+.pc-promo-total{margin-top:.35rem;padding-top:.35rem;border-top:1px solid rgba(160,120,32,.1);font-size:.72rem;color:var(--orb);text-align:right}
+.pc-promo-total s{color:rgba(154,120,64,.45);margin-right:.3rem}
+@media(max-width:900px){.pc-promos{padding:2rem 2rem 0}.pc-promo-grid{grid-template-columns:1fr}}
+
+.pc-stations{max-width:1080px;margin:0 auto;padding:3.5rem 4rem 5rem;border-top:1px solid rgba(160,120,32,.07);margin-top:3rem}
+.pc-sta-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:1.5rem}
+.pc-sta-title{font-family:var(--rye);font-size:1.15rem;color:var(--gold)}
+.pc-sta-sub{font-size:.52rem;letter-spacing:2.5px;text-transform:uppercase;color:rgba(154,120,64,.55);margin-top:.2rem}
+.pc-sta-toggle{background:none;border:1px solid rgba(160,120,32,.2);color:rgba(154,120,64,.7);font-family:var(--osw);font-size:.56rem;letter-spacing:1.5px;text-transform:uppercase;padding:.33rem .85rem;border-radius:3px;cursor:pointer;transition:all .2s;display:none}
+.pc-sta-toggle:hover,.pc-sta-toggle.active{color:var(--gold);border-color:rgba(200,169,76,.4);background:rgba(160,120,32,.1)}
+.pc-sta-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem}
+/* Stations PC toujours visibles */
+@media(max-width:900px){.pc-cards{grid-template-columns:repeat(3,1fr);padding:2rem 2rem 0}.pc-header{padding:1.4rem 2rem}.pc-sta-grid{grid-template-columns:repeat(2,1fr)}.pc-stations{padding:2.5rem 2rem 4rem}}
+
+/* ══════════════════════════════════════
+   MODE MOBILE / FIVEM (≤ 640px)
+══════════════════════════════════════ */
+@media(max-width:640px){
+  .pc-view{display:none}
+  .mobile-view{display:block}
+
+  /* ─ Topbar fixe ─ */
+  .mob-topbar{
+    position:fixed;top:0;left:0;right:0;z-index:900;
+    display:flex;align-items:flex-end;justify-content:space-between;
+    padding:32px 1.1rem .75rem;
+    background:rgba(4,2,1,.97);
+    border-bottom:1px solid rgba(160,120,32,.18);
+    backdrop-filter:blur(24px);
+    box-shadow:0 2px 28px rgba(0,0,0,.75);
+  }
+  .mob-topbar-brand{display:flex;align-items:center;gap:.55rem}
+  .mob-topbar-logo{
+    width:30px;height:30px;border-radius:50%;
+    border:1.5px solid rgba(200,169,76,.4);
+    object-fit:cover;
+    box-shadow:0 0 10px rgba(200,169,76,.15);
+  }
+  .mob-topbar-name{font-family:var(--rye);font-size:.75rem;color:var(--gold);letter-spacing:.5px}
+  .mob-admin-btn{
+    background:linear-gradient(135deg,rgba(160,120,32,.12),rgba(100,70,10,.15));
+    border:1px solid rgba(160,120,32,.32);
+    color:rgba(200,169,76,.75);
+    font-size:.56rem;padding:.3rem .75rem;border-radius:4px;
+    cursor:pointer;font-family:var(--osw);letter-spacing:1.2px;
+    text-transform:uppercase;transition:all .2s;
+  }
+  .mob-admin-btn:active{background:rgba(160,120,32,.25);color:var(--gold)}
+
+  /* ─ Contenu scrollable ─ */
+  .mob-content{
+    margin-top:calc(32px + 46px);
+    padding:.85rem 1rem 7rem;
+    min-height:calc(100vh - 78px);
+  }
+
+  /* ─ Cartes espaces ─ */
+  .mob-cards{display:flex;flex-direction:column;gap:.6rem;margin-bottom:1.5rem}
+
+  .mob-card{
+    display:flex;align-items:center;gap:.85rem;
+    padding:.9rem 1rem;
+    background:linear-gradient(135deg,rgba(16,7,2,.92),rgba(8,4,1,.97));
+    border:1px solid rgba(160,120,32,.15);
+    border-radius:10px;
+    text-decoration:none;color:inherit;cursor:pointer;
+    position:relative;overflow:hidden;
+    transition:transform .15s,border-color .2s,box-shadow .2s;
+    animation:mobCardIn .5s ease both;
+  }
+  .mob-card:nth-child(1){animation-delay:.05s}
+  .mob-card:nth-child(2){animation-delay:.12s}
+  .mob-card:nth-child(3){animation-delay:.19s}
+  @keyframes mobCardIn{from{opacity:0;transform:translateX(-18px)}to{opacity:1;transform:none}}
+  .mob-card::before{
+    content:'';position:absolute;inset:0;opacity:0;transition:opacity .3s;
+    background:linear-gradient(135deg,rgba(200,169,76,.05),transparent 60%);
+  }
+  .mob-card:active{transform:scale(.975);box-shadow:0 2px 16px rgba(0,0,0,.5)}
+  .mob-card:active::before{opacity:1}
+
+  /* Bordure gauche colorée + lueur */
+  .mob-c1{border-left:2.5px solid rgba(200,169,76,.45);box-shadow:inset 3px 0 12px rgba(200,169,76,.04)}
+  .mob-c2{border-left:2.5px solid rgba(58,122,255,.4);box-shadow:inset 3px 0 12px rgba(58,122,255,.04)}
+  .mob-c3{border-left:2.5px solid rgba(46,204,80,.4);box-shadow:inset 3px 0 12px rgba(46,204,80,.04)}
+
+  .mob-card-icon{
+    font-size:1.5rem;width:42px;height:42px;
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(255,255,255,.04);
+    border:1px solid rgba(255,255,255,.06);
+    border-radius:9px;flex-shrink:0;
+    position:relative;z-index:1;
+  }
+  .mob-card-info{flex:1;min-width:0;position:relative;z-index:1}
+  .mob-card-title{font-family:var(--rye);font-size:.88rem;color:var(--cream);margin-bottom:.1rem}
+  .mob-card-desc{font-size:.58rem;color:var(--tan);letter-spacing:.3px;line-height:1.45}
+  .mob-card-arrow{
+    font-size:1.1rem;color:rgba(255,255,255,.1);flex-shrink:0;
+    transition:all .2s;position:relative;z-index:1;
+  }
+  .mob-card:active .mob-card-arrow{color:rgba(200,169,76,.6);transform:translateX(3px)}
+
+  .mob-card-badge{
+    position:absolute;top:.42rem;right:.7rem;
+    font-size:.42rem;font-weight:700;letter-spacing:1.5px;
+    text-transform:uppercase;padding:.1rem .38rem;
+    border-radius:2px;border:1px solid;
+  }
+  .mob-c1 .mob-card-badge{color:#C9A84C;border-color:rgba(200,169,76,.3);background:rgba(200,169,76,.07)}
+  .mob-c2 .mob-card-badge{color:#82aaff;border-color:rgba(58,122,255,.3);background:rgba(58,122,255,.07)}
+  .mob-c3 .mob-card-badge{color:#6edb8e;border-color:rgba(46,204,80,.3);background:rgba(46,204,80,.06)}
+
+  /* ─ Section stations ─ */
+  .mob-sta-section{
+    border-top:1px solid rgba(160,120,32,.1);
+    padding-top:1rem;
+    position:relative;
+  }
+  .mob-sta-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.3rem}
+  .mob-sta-title{font-family:var(--rye);font-size:.85rem;color:var(--gold)}
+  .mob-sta-toggle{
+    background:none;border:1px solid rgba(160,120,32,.22);
+    color:rgba(154,120,64,.8);font-family:var(--osw);
+    font-size:.52rem;letter-spacing:1.2px;text-transform:uppercase;
+    padding:.22rem .6rem;border-radius:3px;cursor:pointer;
+    transition:all .2s;display:inline-block;
+  }
+  .mob-sta-toggle.hidden{display:none}
+  .mob-sta-toggle.active{color:var(--gold);border-color:rgba(200,169,76,.4);background:rgba(160,120,32,.1)}
+  .mob-sta-sub{font-size:.5rem;letter-spacing:2px;text-transform:uppercase;color:rgba(154,120,64,.4);margin-bottom:.75rem}
+
+  /* Grille stations : 1 colonne, cartes en fondu à l'apparition */
+  .mob-sta-grid{display:flex;flex-direction:column;gap:.55rem}
+  .mob-sta-grid:not(.show-all) .sta-card{display:none}
+  .mob-sta-grid .sta-thumb{height:80px}
+
+  /* Fondu d'apparition des cartes station */
+  .mob-sta-grid .sta-card{
+    animation:staFadeIn .45s ease both;
+    opacity:0;
+  }
+  .mob-sta-grid.show-all .sta-card{opacity:1}
+  .mob-sta-grid .sta-card:nth-child(1){animation-delay:.0s}
+  .mob-sta-grid .sta-card:nth-child(2){animation-delay:.07s}
+  .mob-sta-grid .sta-card:nth-child(3){animation-delay:.14s}
+  .mob-sta-grid .sta-card:nth-child(4){animation-delay:.21s}
+  .mob-sta-grid .sta-card:nth-child(5){animation-delay:.28s}
+  .mob-sta-grid .sta-card:nth-child(6){animation-delay:.35s}
+  .mob-sta-grid .sta-card:nth-child(7){animation-delay:.42s}
+  .mob-sta-grid .sta-card:nth-child(8){animation-delay:.49s}
+  @keyframes staFadeIn{
+    from{opacity:0;transform:translateY(14px)}
+    to{opacity:1;transform:none}
+  }
+
+  /* Fond dégradé en bas de la liste stations (effet fondu) */
+  .mob-sta-section::after{
+    content:'';
+    position:absolute;bottom:0;left:0;right:0;height:80px;
+    background:linear-gradient(to bottom,transparent,rgba(8,4,1,.97));
+    pointer-events:none;
+    display:none;
+  }
+  .mob-sta-section.has-stations::after{display:block}
+
+  /* ── Hero mobile ── */
+  .mob-hero{
+    padding:1.6rem 1rem 1rem;
+    text-align:center;
+    border-bottom:1px solid rgba(160,120,32,.07);
+    margin-bottom:1rem;
+    animation:heroFadeUp .7s ease both;
+  }
+  @keyframes heroFadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+  .mob-hero-title{
+    font-family:'Playfair Display',serif;
+    font-style:italic;font-weight:900;
+    font-size:clamp(1.8rem,7vw,2.4rem);
+    color:var(--cream);
+    line-height:1.1;
+    text-shadow:0 2px 20px rgba(0,0,0,.6);
+    margin-bottom:.4rem;
+  }
+  .mob-hero-title span{color:var(--gold);}
+  .mob-hero-sub{
+    font-family:var(--cor);font-style:italic;
+    font-size:.82rem;color:rgba(240,222,176,.6);
+    letter-spacing:.4px;font-weight:300;
+  }
+  .mob-hero-orn{display:flex;align-items:center;justify-content:center;gap:.6rem;opacity:.35;margin:.7rem 0 0}
+  .mob-hero-orn-line{width:40px;height:1px;background:linear-gradient(90deg,transparent,var(--gold2))}
+  .mob-hero-orn-line.r{background:linear-gradient(90deg,var(--gold2),transparent)}
+  .mob-hero-orn-dots{font-size:.4rem;letter-spacing:4px;color:var(--gold)}
+
+  /* ── Promos mobile ── */
+  .mob-promo-section{margin-bottom:1.5rem}
+  .mob-promo-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem}
+  .mob-promo-title{font-family:var(--rye);font-size:.85rem;color:var(--gold)}
+  .mob-promo-sub{font-size:.5rem;letter-spacing:2px;text-transform:uppercase;color:rgba(154,120,64,.4);margin-bottom:.7rem}
+  .mob-promo-grid{display:flex;flex-direction:column;gap:.7rem}
+  .mob-promo-grid:not(.show-all) .mob-promo-card{display:none}
+  .mob-promo-grid.show-all .mob-promo-card{opacity:1}
+
+  /* Désactiver les animations de fond pulsantes sur mobile */
+  .bg-gradient{ animation:none !important; opacity:1 !important; }
+  .bg-grid    { animation:none !important; }
+  .particle   { display:none !important; }
+  .ember      { display:none !important; }
+
+  .mob-promo-card{
+    background:linear-gradient(135deg,rgba(18,8,2,.95),rgba(10,5,1,.98));
+    border:1px solid rgba(160,120,32,.2);border-radius:8px;
+    overflow:hidden;
+  }
+  .mob-promo-card-img{width:100%;height:100px;object-fit:cover;display:block}
+  .mob-promo-card-body{padding:.85rem 1rem}
+  .mob-promo-card-badge{display:inline-block;font-size:.44rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gold);border:1px solid rgba(200,169,76,.3);background:rgba(200,169,76,.07);padding:.12rem .45rem;border-radius:2px;margin-bottom:.5rem}
+  .mob-promo-card-name{font-family:var(--rye);font-size:.88rem;color:var(--cream);margin-bottom:.3rem}
+  .mob-promo-card-desc{font-size:.62rem;color:var(--tan);letter-spacing:.3px;line-height:1.5;margin-bottom:.5rem}
+  .mob-promo-prod-line{display:flex;align-items:center;gap:.4rem;font-size:.65rem;padding:.2rem 0;border-bottom:1px solid rgba(160,120,32,.06)}
+  .mob-promo-prod-name{flex:1;color:rgba(240,222,176,.8)}
+  .mob-promo-prod-qty{color:rgba(154,120,64,.6);white-space:nowrap}
+  .mob-promo-prod-price{color:var(--gold2);font-weight:600;white-space:nowrap}
+  .mob-promo-prod-price s{color:rgba(154,120,64,.45);font-weight:400;margin-right:.2rem}
+  .mob-promo-total{margin-top:.4rem;font-size:.72rem;color:var(--orb);text-align:right}
+  .mob-promo-total s{color:rgba(154,120,64,.4);margin-right:.25rem}
+  .mob-promo-reductions{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.5rem}
+  .mob-promo-price{margin-top:.5rem;font-size:.85rem;color:var(--gold);letter-spacing:.5px}
+  .mob-promo-price s{color:rgba(154,120,64,.5);font-size:.75rem;margin-right:.3rem}
+  .mob-promo-empty{text-align:center;padding:1rem;color:rgba(154,120,64,.35);font-size:.65rem;letter-spacing:1px}
+}
+
+/* ═══ MODAL STATION DETAIL ═══ */
+.sta-modal-overlay{position:fixed;inset:0;z-index:2000;background:rgba(4,2,1,.88);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:1rem}
+.sta-modal-overlay.open{display:flex;animation:fadeIn .25s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.sta-modal-box{background:linear-gradient(160deg,rgba(22,10,2,.99),rgba(8,4,1,.99));border:1px solid rgba(160,120,32,.3);border-radius:12px;width:min(480px,95vw);max-height:90vh;overflow:hidden;animation:popIn .3s cubic-bezier(.34,1.2,.64,1)}
+@keyframes popIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:none}}
+.sta-modal-photo{width:100%;height:200px;object-fit:cover;display:block}
+.sta-modal-photo-ph{width:100%;height:200px;background:linear-gradient(135deg,rgba(30,15,4,.9),rgba(8,4,1,.95));display:flex;align-items:center;justify-content:center;font-size:3.5rem;opacity:.5}
+.sta-modal-body{padding:1.4rem 1.6rem 1.6rem}
+.sta-modal-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1rem}
+.sta-modal-name{font-family:'Rye',serif;font-size:1.2rem;color:var(--gold);line-height:1.3}
+.sta-modal-close{background:none;border:none;color:rgba(154,120,64,.6);font-size:1.3rem;cursor:pointer;padding:.25rem .5rem;transition:color .2s;line-height:1;margin-left:.5rem;flex-shrink:0}
+.sta-modal-close:hover{color:var(--cream)}
+.sta-modal-pct{font-family:'Rye',serif;font-size:1.8rem;margin-bottom:.5rem}
+.sta-modal-pct.ok{color:#4dff9b}
+.sta-modal-pct.mid{color:#ffcc44}
+.sta-modal-pct.low{color:#ff7070}
+.sta-modal-bar-wrap{height:6px;background:rgba(255,255,255,.07);border-radius:3px;margin-bottom:1.2rem;overflow:hidden}
+.sta-modal-bar{height:6px;border-radius:3px;transition:width 1s ease}
+.sta-modal-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.6rem;margin-bottom:1rem}
+.sta-modal-stat{background:rgba(255,255,255,.03);border:1px solid rgba(160,120,32,.1);border-radius:6px;padding:.6rem .7rem;text-align:center}
+.sta-modal-stat-label{font-size:.52rem;letter-spacing:1.5px;text-transform:uppercase;color:rgba(154,120,64,.6);margin-bottom:.3rem}
+.sta-modal-stat-val{font-size:.95rem;color:var(--gold);font-weight:600}
+.sta-modal-rav{font-size:.7rem;color:rgba(154,120,64,.6);text-align:center}
+.sta-modal-rav span{color:rgba(200,169,76,.7)}
+/* Curseur pointer sur les cartes stations */
+.sta-card{cursor:pointer}
+
+/* ═══ ANIMATIONS DYNAMIQUES PC ═══ */
+/* Flux lumineux sur les cartes */
+.pc-card::after{content:'';position:absolute;top:-60%;left:-60%;width:80%;height:220%;background:linear-gradient(105deg,transparent 40%,rgba(200,169,76,.06) 50%,transparent 60%);transform:skewX(-15deg);transition:none;pointer-events:none}
+.pc-card:hover::after{animation:cardShine .6s ease forwards}
+@keyframes cardShine{0%{left:-60%}100%{left:150%}}
+/* Orbes flottants PC */
+.pc-orb{position:absolute;border-radius:50%;pointer-events:none;animation:orbFloat var(--dur,8s) ease-in-out infinite var(--del,0s)}
+@keyframes orbFloat{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(var(--tx,20px),var(--ty,-30px)) scale(1.1)}66%{transform:translate(calc(var(--tx,20px)*-.5),var(--ty,-15px)) scale(.95)}}
+/* Ligne de scan hero */
+.pc-scan{position:absolute;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(200,169,76,.15),transparent);animation:scanMove 6s linear infinite;pointer-events:none}
+@keyframes scanMove{0%{top:-5%}100%{top:105%}}
+/* Pulse sur le titre */
+.pc-hero-title{animation:fadeUp .8s ease both,titleGlow 4s ease-in-out 1s infinite}
+@keyframes titleGlow{0%,100%{text-shadow:0 4px 40px rgba(0,0,0,.6)}50%{text-shadow:0 4px 40px rgba(0,0,0,.6),0 0 60px rgba(200,169,76,.08)}}
+
+/* ═══ SCROLLBAR CUSTOM ═══ */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:rgba(10,4,1,.6);border-radius:10px}
+::-webkit-scrollbar-thumb{background:rgba(160,120,32,.45);border-radius:10px;transition:background .2s}
+::-webkit-scrollbar-thumb:hover{background:rgba(200,169,76,.7)}
+::-webkit-scrollbar-corner{background:transparent}
+/* Firefox */
+*{scrollbar-width:thin;scrollbar-color:rgba(160,120,32,.45) rgba(10,4,1,.6)}
+
+
+
+
+
+/* ── Typewriter ── */
+.tw-cursor{
+  display:inline-block;color:var(--gold);
+  animation:twBlink .8s ease-in-out infinite;
+  font-family:var(--rye);margin-left:2px;
+}
+@keyframes twBlink{0%,100%{opacity:1}50%{opacity:0}}
+.tw-gold{color:var(--gold)}
+
+
+/* ── Typewriter ── */
+.tw-cursor{display:inline-block;color:var(--gold);animation:twBlink .8s ease-in-out infinite;font-family:var(--rye);margin-left:1px}
+50%{opacity:0}}
+
+/* ── Embers ── */
+.ember{
+  position:absolute;border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle,rgba(220,120,20,.85),transparent 70%);
+  animation:emberFloat var(--dur,12s) ease-in-out infinite var(--del,0s);
+  filter:blur(.8px);
+}
+@keyframes emberFloat{
+  0%{transform:translateY(0) translateX(0);opacity:0}
+  8%{opacity:.9}
+  50%{transform:translateY(var(--ty,-200px)) translateX(var(--tx,20px));opacity:.5}
+  100%{transform:translateY(calc(var(--ty,-200px)*2)) translateX(var(--tx2,40px));opacity:0}
+}
+
+/* ── Fond grain western ── */
+.bg-grain{
+  position:absolute;inset:0;pointer-events:none;opacity:.04;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode:overlay;
+}
+
+</style>
+</head>
+<body>
+
+<!-- ══ MODE PC ══ -->
+<div class="pc-view">
+  <header class="pc-header">
+    <div class="pc-logo-wrap">
+      <img class="pc-logo" src="https://i.postimg.cc/44zrq5pG/ltdss.jpg" alt="LTD">
+      <div>
+        <div class="pc-brand-name">LTD Sandy Shores</div>
+        <div class="pc-brand-tag">Fournisseur officiel · San Andreas</div>
+      </div>
+    </div>
+    <nav class="pc-nav">
+      <a href="particulier.html" class="pc-nav-btn" onclick="LTD.goto('particulier.html',event)">Particulier</a>
+      <span class="pc-nav-sep"></span>
+      <a href="entreprise.html" class="pc-nav-btn" onclick="LTD.goto('entreprise.html',event)">Entreprise</a>
+      <span class="pc-nav-sep"></span>
+      <a href="employe.html" class="pc-nav-btn" onclick="LTD.goto('employe.html',event)">Employé</a>
+      <span class="pc-nav-sep"></span>
+      <button class="pc-admin-btn" onclick="LTD.goto('admin.html',event)">⚙ Admin</button>
+    </nav>
+  </header>
+  <section class="pc-hero">
+    <h1 class="pc-hero-title" id="hero-title" aria-label="LTD Sandy Shores"><span id="tw-text"></span><span class="tw-cursor">|</span></h1>
+    <p class="pc-hero-sub">Livraison, carburant &amp; services aux entreprises de San Andreas</p>
+    <div class="pc-hero-orn">
+      <div class="pc-hero-orn-line"></div>
+      <span class="pc-hero-orn-dots">✦ ✦ ✦</span>
+      <div class="pc-hero-orn-line r"></div>
+    </div>
+  </section>
+  <div class="pc-cards">
+    <a href="particulier.html" class="pc-card pc1" onclick="LTD.goto('particulier.html',event)">
+      <div class="pc-card-accent"></div>
+      <span class="pc-card-badge">Commandes</span>
+      <span class="pc-card-icon">🛒</span>
+      <div class="pc-card-title">Espace Particulier</div>
+      <div class="pc-card-desc">Passez votre commande en ligne — livraison à domicile dans tout San Andreas</div>
+      <div class="pc-card-arrow">›</div>
+    </a>
+    <a href="entreprise.html" class="pc-card pc2" onclick="LTD.goto('entreprise.html',event)">
+      <div class="pc-card-accent"></div>
+      <span class="pc-card-badge">B2B</span>
+      <span class="pc-card-icon">🏢</span>
+      <div class="pc-card-title">Espace Entreprise</div>
+      <div class="pc-card-desc">Commandes en gros — accès réservé aux partenaires agréés LTD</div>
+      <div class="pc-card-arrow">›</div>
+    </a>
+    <a href="employe.html" class="pc-card pc3" onclick="LTD.goto('employe.html',event)">
+      <div class="pc-card-accent"></div>
+      <span class="pc-card-badge">Interne</span>
+      <span class="pc-card-icon">⛽</span>
+      <div class="pc-card-title">Espace Employé</div>
+      <div class="pc-card-desc">Stations essence, véhicules de service &amp; demandes internes</div>
+      <div class="pc-card-arrow">›</div>
+    </a>
+  </div>
+  <!-- ══ PROMOTIONS ══ -->
+  <div class="pc-promos">
+    <div class="pc-promos-title">🏷 Promotions &amp; offres spéciales</div>
+    <div class="pc-promos-sub">Offres en cours · LTD Sandy Shores</div>
+    <div class="pc-promo-grid" id="pc-promo-grid">
+      <div class="pc-promo-empty">Chargement des promotions...</div>
+    </div>
+  </div>
+  <div class="pc-stations">
+    <div class="pc-sta-header">
+      <div>
+        <div class="pc-sta-title">⛽ Stations essence</div>
+        <div class="pc-sta-sub">Niveaux en temps réel</div>
+      </div>
+      <button class="pc-sta-toggle" id="pc-sta-toggle" onclick="toggleStations('pc')">⊞ Afficher</button>
+    </div>
+    <div class="pc-sta-grid" id="pc-sta-grid"></div>
+  </div>
+  <footer style="text-align:center;padding:1.5rem;font-size:.55rem;color:rgba(154,120,64,.28);letter-spacing:1px;border-top:1px solid rgba(160,120,32,.06)">© 2026 LTD Sandy Shores · San Andreas · @LucasLM</footer>
+</div>
+
+<!-- ══ MODE MOBILE ══ -->
+<div class="mobile-view">
+  <nav class="mob-topbar">
+    <div class="mob-topbar-brand">
+      <img class="mob-topbar-logo" src="https://i.postimg.cc/44zrq5pG/ltdss.jpg" alt="LTD">
+      <span class="mob-topbar-name">LTD Sandy Shores</span>
+    </div>
+    <div>
+      <button class="mob-admin-btn" onclick="LTD.goto('admin.html',event)">⚙ Admin</button>
+    </div>
+  </nav>
+  <div class="mob-content">
+
+    <!-- Hero -->
+    <div class="mob-hero">
+      <div class="mob-hero-title"><span id="mob-tw-text"></span><span class="tw-cursor" id="mob-tw-cursor">|</span></div>
+      <div class="mob-hero-sub">Livraison, carburant &amp; services aux entreprises de San Andreas</div>
+      <div class="mob-hero-orn">
+        <div class="mob-hero-orn-line"></div>
+        <span class="mob-hero-orn-dots">✦ ✦ ✦</span>
+        <div class="mob-hero-orn-line r"></div>
+      </div>
+    </div>
+
+    <!-- Cartes accès -->
+    <div class="mob-cards">
+      <a href="particulier.html" class="mob-card mob-c1" onclick="LTD.goto('particulier.html',event)">
+        <span class="mob-card-badge">Commandes</span>
+        <div class="mob-card-icon">🛒</div>
+        <div class="mob-card-info">
+          <div class="mob-card-title">Particulier</div>
+          <div class="mob-card-desc">Passez votre commande — Livraison à domicile</div>
+        </div>
+        <div class="mob-card-arrow">›</div>
+      </a>
+      <a href="entreprise.html" class="mob-card mob-c2" onclick="LTD.goto('entreprise.html',event)">
+        <span class="mob-card-badge">B2B</span>
+        <div class="mob-card-icon">🏢</div>
+        <div class="mob-card-info">
+          <div class="mob-card-title">Espace Entreprise</div>
+          <div class="mob-card-desc">Commandes en gros — Accès partenaires agréés</div>
+        </div>
+        <div class="mob-card-arrow">›</div>
+      </a>
+      <a href="employe.html" class="mob-card mob-c3" onclick="LTD.goto('employe.html',event)">
+        <span class="mob-card-badge">Interne</span>
+        <div class="mob-card-icon">⛽</div>
+        <div class="mob-card-info">
+          <div class="mob-card-title">Espace Employé</div>
+          <div class="mob-card-desc">Stations · Véhicules · Demandes internes</div>
+        </div>
+        <div class="mob-card-arrow">›</div>
+      </a>
+    </div>
+    <!-- Promotions — même structure que stations -->
+    <div class="mob-sta-section" style="margin-top:.5rem">
+      <div class="mob-sta-header">
+        <div class="mob-sta-title">🏷 Promotions</div>
+        <button class="mob-sta-toggle" id="mob-promo-toggle" onclick="togglePromosMob()">⊞ Afficher</button>
+      </div>
+      <div class="mob-sta-sub">Offres en cours · LTD Sandy Shores</div>
+      <div class="mob-promo-grid" id="mob-promo-grid"></div>
+    </div>
+
+        <div class="mob-sta-section">
+      <div class="mob-sta-header">
+        <div class="mob-sta-title">⛽ Stations essence</div>
+        <button class="mob-sta-toggle" id="mob-sta-toggle" onclick="toggleStationsMob()">⊞ Afficher</button>
+      </div>
+      <div class="mob-sta-sub">Niveaux en temps réel · San Andreas</div>
+      <div class="mob-sta-grid" id="mob-sta-grid"></div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- Modal station detail -->
+<div class="sta-modal-overlay" id="sta-detail-modal" onclick="if(event.target===this)closeStaModal()">
+  <div class="sta-modal-box">
+    <div id="sta-modal-photo-wrap"></div>
+    <div class="sta-modal-body">
+      <div class="sta-modal-header">
+        <div class="sta-modal-name" id="sta-modal-name">Station</div>
+        <button class="sta-modal-close" onclick="closeStaModal()">✕</button>
+      </div>
+      <div class="sta-modal-pct" id="sta-modal-pct">—%</div>
+      <div class="sta-modal-bar-wrap"><div class="sta-modal-bar" id="sta-modal-bar" style="width:0%"></div></div>
+      <div class="sta-modal-grid">
+        <div class="sta-modal-stat"><div class="sta-modal-stat-label">Volume actuel</div><div class="sta-modal-stat-val" id="sta-modal-actuel">—</div></div>
+        <div class="sta-modal-stat"><div class="sta-modal-stat-label">Capacité max</div><div class="sta-modal-stat-val" id="sta-modal-max">—</div></div>
+        <div class="sta-modal-stat"><div class="sta-modal-stat-label">Prix / L</div><div class="sta-modal-stat-val" id="sta-modal-prix">—</div></div>
+      </div>
+      <div class="sta-modal-rav">⏱ Dernier ravitaillement : <span id="sta-modal-rav">—</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal vendeur en service -->
+<div class="vend-modal-overlay" id="vend-detail-modal" onclick="if(event.target===this)closeVendeurModal()">
+  <div class="vend-modal-box">
+    <div class="vend-modal-header">
+      <div id="vend-modal-avatar-wrap"></div>
+      <div class="vend-modal-info">
+        <button class="vend-modal-close" onclick="closeVendeurModal()">✕</button>
+        <div class="vend-modal-name" id="vend-modal-name">—</div>
+        <div class="vend-modal-poste" id="vend-modal-poste">—</div>
+        <div class="vend-modal-status">⬤ En service</div>
+      </div>
+    </div>
+    <div class="vend-modal-body">
+      <div class="vend-modal-bio" id="vend-modal-bio" style="display:none"></div>
+      <div class="vend-modal-stat">
+        <span class="vend-modal-stat-label">Station</span>
+        <span class="vend-modal-stat-val" id="vend-modal-station">—</span>
+      </div>
+      <div class="vend-modal-stat">
+        <span class="vend-modal-stat-label">En service depuis</span>
+        <span class="vend-modal-stat-val" id="vend-modal-depuis">—</span>
+      </div>
+      <div class="vend-modal-stat">
+        <span class="vend-modal-stat-label">Téléphone</span>
+        <span class="vend-modal-stat-val" id="vend-modal-tel">—</span>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="toast-wrap"></div>
+
+<script>
+// ══ LTD SANDY SHORES ══
+var LTD = {
+  goto: function(url, e) {
+    if(e) e.preventDefault();
+    var pt = document.getElementById('page-transition');
+    if(!pt){ location.href=url; return; }
+    pt.classList.add('go');
+    setTimeout(function(){ location.href=url; }, 460);
+  }
+};
+
+// ══ FOND ANIMÉ ══
+(function initBg(){
+  var b = document.body;
+  // Layers fixes
+  var layers = [
+    ['bg-gradient',''],['bg-grid',''],['bg-vignette',''],['bg-stars','stars']
+  ];
+  layers.forEach(function(l){
+    var d = document.createElement('div');
+    d.style.cssText = 'position:fixed;inset:0;z-index:0;pointer-events:none';
+    d.className = 'bg-layer ' + l[0];
+    if(l[1]) d.id = l[1];
+    b.insertBefore(d, b.firstChild);
+  });
+  // Étoiles
+  var sc = document.getElementById('stars');
+  if(sc){ for(var i=0;i<85;i++){
+    var s=document.createElement('div'); s.className='star';
+    var sz=Math.random()*2.2+.4;
+    s.style.cssText='width:'+sz+'px;height:'+sz+'px;left:'+Math.random()*100+'%;top:'+Math.random()*100+'%;--d:'+(2+Math.random()*6)+'s;--dl:'+Math.random()*8+'s';
+    sc.appendChild(s);
+  }}
+  // Particules
+  for(var j=0;j<15;j++){
+    var p=document.createElement('div'); p.className='particle';
+    var ps=Math.random()*12+4;
+    p.style.cssText='width:'+ps+'px;height:'+ps+'px;left:'+Math.random()*100+'%;--dur:'+(11+Math.random()*18)+'s;--del:'+Math.random()*16+'s';
+    b.appendChild(p);
+  }
+})();
+
+// ══ PAGE TRANSITION ══
+window.addEventListener('pageshow', function(){
+  var pt = document.getElementById('page-transition');
+  if(pt){ pt.classList.remove('go'); pt.classList.add('out'); setTimeout(function(){ pt.classList.remove('out'); }, 500); }
+});
+
+// ══ TOGGLE STATIONS MOBILE ══
+var _mobExp = false;
+function toggleStationsMob(){
+  _mobExp = !_mobExp;
+  var g = document.getElementById('mob-sta-grid');
+  var btn = document.getElementById('mob-sta-toggle');
+  var sec = document.querySelector('.mob-sta-section');
+  if(g) g.classList.toggle('show-all', _mobExp);
+  if(sec) sec.classList.toggle('has-stations', _mobExp);
+  if(btn){ btn.textContent = _mobExp ? '⊟ Réduire' : '⊞ Afficher'; btn.classList.toggle('active', _mobExp); }
+}
+
+var _mobPromoExp = false;
+function togglePromosMob(){
+  _mobPromoExp = !_mobPromoExp;
+  var g = document.getElementById('mob-promo-grid');
+  var btn = document.getElementById('mob-promo-toggle');
+  if(g) g.classList.toggle('show-all', _mobPromoExp);
+  if(btn){ btn.textContent = _mobPromoExp ? '⊟ Réduire' : '⊞ Afficher'; btn.classList.toggle('active', _mobPromoExp); }
+}
+
+// ══ MODAL STATION ══
+function openStaModal(s){
+  var actuel = Math.round(parseFloat(s.volume_actuel)||0);
+  var max = Math.round(parseFloat(s.volume_max)||5000);
+  var pct = max>0 ? Math.round(actuel/max*100) : 0;
+  var barCol = pct>=60?'#00c850':pct>=30?'#ffc800':'#ff4444';
+  var pctCls = pct>=60?'ok':pct>=30?'mid':'low';
+  var prix = parseFloat(s.prix_vente)||0;
+  var rav = s.dernier_rav ? String(s.dernier_rav).substring(0,16).replace('T',' ') : '—';
+  var pw = document.getElementById('sta-modal-photo-wrap');
+  if(pw) pw.innerHTML = s.photo_url
+    ? '<img class="sta-modal-photo" src="'+s.photo_url+'" alt="'+s.nom+'">'
+    : '<div class="sta-modal-photo-ph">⛽</div>';
+  var n=document.getElementById('sta-modal-name'); if(n) n.textContent=s.nom;
+  var p=document.getElementById('sta-modal-pct'); if(p){ p.textContent=pct+'%'; p.className='sta-modal-pct '+pctCls; }
+  var bEl=document.getElementById('sta-modal-bar'); if(bEl){ bEl.style.width=pct+'%'; bEl.style.background=barCol; }
+  var a=document.getElementById('sta-modal-actuel'); if(a) a.textContent=actuel.toLocaleString('fr-FR')+' L';
+  var m=document.getElementById('sta-modal-max'); if(m) m.textContent=max.toLocaleString('fr-FR')+' L';
+  var px=document.getElementById('sta-modal-prix'); if(px) px.textContent=prix>0?prix.toFixed(2)+' $':'—';
+  var r=document.getElementById('sta-modal-rav'); if(r) r.textContent=rav;
+  var ov=document.getElementById('sta-detail-modal'); if(ov) ov.classList.add('open');
+}
+function closeStaModal(){
+  var ov=document.getElementById('sta-detail-modal'); if(ov) ov.classList.remove('open');
+}
+
+// ══ BUILD CARTE STATION ══
+function buildStaCard(s){
+  var actuel=Math.round(parseFloat(s.volume_actuel)||0), max=Math.round(parseFloat(s.volume_max)||5000);
+  var pct=max>0?Math.round(actuel/max*100):0;
+  var barCol=pct>=60?'#00c850':pct>=30?'#ffc800':'#ff4444';
+  var bc=pct>=60?'sta-pct-ok':pct>=30?'sta-pct-mid':'sta-pct-low';
+  var prix=parseFloat(s.prix_vente)||0;
+  var rav=s.dernier_rav?String(s.dernier_rav).substring(0,16).replace('T',' '):'—';
+  var sd=s;
+  var card=document.createElement('div'); card.className='sta-card';
+  card.onclick=function(){ openStaModal(sd); };
+  var th;
+  if(s.photo_url){
+    var t=document.createElement('div'); t.className='sta-thumb';
+    var img=document.createElement('img'); img.src=s.photo_url; img.alt=s.nom;
+    img.onerror=function(){ this.parentNode.innerHTML='<div class="sta-thumb-placeholder">⛽</div>'; };
+    t.appendChild(img);
+    var bd=document.createElement('div'); bd.className='sta-pct-badge '+bc; bd.textContent=pct+'%';
+    t.appendChild(bd); th=t.outerHTML;
+  } else {
+    th='<div class="sta-thumb"><div class="sta-thumb-placeholder">⛽</div><div class="sta-pct-badge '+bc+'">'+pct+'%</div></div>';
+  }
+  card.innerHTML=th+'<div class="sta-body"><div class="sta-name">'+s.nom+'</div>'+
+    '<div class="sta-bar-wrap"><div class="sta-bar" style="width:'+pct+'%;background:'+barCol+'"></div></div>'+
+    '<div class="sta-meta"><strong>'+actuel.toLocaleString('fr-FR')+'</strong> / '+max.toLocaleString('fr-FR')+' L'+
+    (prix>0?' · <span class="sta-prix">'+prix.toFixed(2)+' $/L</span>':'')+
+    '<br>⏱ '+rav+'</div></div>';
+  return card;
+}
+
+// ══ CHARGEMENT STATIONS ══
+function loadHomeStations(){
+  var ids=['pc-sta-grid','mob-sta-grid'];
+  var timeout=setTimeout(function(){
+    ids.forEach(function(id){ var g=document.getElementById(id); if(g) g.innerHTML='<div class="sta-err">⚠ Délai dépassé</div>'; });
+  }, 8000);
+  fetch('api.php?action=get_stations_public', {method:'GET'})
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      clearTimeout(timeout);
+      if(!res||!res.stations||!res.stations.length){
+        ids.forEach(function(id){ var g=document.getElementById(id); if(g) g.innerHTML='<div class="sta-loading">Aucune station</div>'; });
+        return;
+      }
+      ids.forEach(function(id){
+        var g=document.getElementById(id); if(!g) return;
+        g.innerHTML='';
+        res.stations.forEach(function(s){ g.appendChild(buildStaCard(s)); });
+      });
+      // Mobile : afficher bouton toggle
+      var mb=document.getElementById('mob-sta-toggle'); if(mb) mb.style.display='inline-block';
+    })
+    .catch(function(){
+      clearTimeout(timeout);
+      ids.forEach(function(id){ var g=document.getElementById(id); if(g) g.innerHTML='<div class="sta-err">⚠ Erreur</div>'; });
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function(){ loadHomeStations(); loadHomePromos(); });
+
+/* ── Promotions accueil ── */
+function loadHomePromos(){
+  var g = document.getElementById('pc-promo-grid');
+  var gMob = document.getElementById('mob-promo-grid');
+  // Filtrer selon le jour et l'heure actuels
+  function promoValideAujourdhui(p){
+    var now = new Date();
+    var jour = now.getDay(); // 0=Dim, 1=Lun...
+    var hhmm = now.getHours()*60 + now.getMinutes();
+    // Jours
+    if(p.jours && p.jours.length && p.jours.indexOf(jour) === -1) return false;
+    // Horaires
+    if(p.heure_debut || p.heure_fin){
+      var parse = function(s){ var t=(s||'').split(':'); return parseInt(t[0]||0)*60+parseInt(t[1]||0); };
+      var debut = p.heure_debut ? parse(p.heure_debut) : 0;
+      var fin   = p.heure_fin   ? parse(p.heure_fin)   : 1439;
+      if(hhmm < debut || hhmm > fin) return false;
+    }
+    // Dates
+    var today = now.toISOString().substring(0,10);
+    if(p.date_debut && today < p.date_debut) return false;
+    if(p.date_fin   && today > p.date_fin)   return false;
+    return true;
+  }
+  fetch('api.php?action=get_promos')
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      var promos = (res && res.promos) ? res.promos.filter(function(p){ return p.active && promoValideAujourdhui(p); }) : [];
+      if(!promos.length){
+        g.innerHTML = '<div class="pc-promo-empty">Aucune promotion en cours</div>';
+        if(gMob) gMob.innerHTML = '<div class="mob-promo-empty">Aucune promotion en cours</div>';
+        return;
+      }
+      g.innerHTML = '';
+      _renderPromoMobile(gMob, promos);
+      promos.forEach(function(p){
+        var card = document.createElement('div');
+        card.className = 'pc-promo-card';
+        var inner = '';
+        if(p.image){
+          var img = document.createElement('img');
+          img.src = p.image;
+          img.style.cssText = 'width:100%;height:120px;object-fit:cover;border-radius:6px;margin-bottom:.75rem';
+          img.onerror = function(){ this.style.display='none'; };
+          card.appendChild(img);
+        }
+        var reduHtml = '';
+        if(p.pct) reduHtml += '<span class="pc-promo-badge" style="background:rgba(200,120,30,.12);color:#f5a623;border-color:rgba(200,120,30,.3)">-'+p.pct+'%</span> ';
+        if(p.offert_qty&&p.offert_bonus) reduHtml += '<span class="pc-promo-badge" style="background:rgba(30,100,200,.12);color:#82aaff;border-color:rgba(30,100,200,.3)">'+p.offert_qty+' → '+p.offert_bonus+' offert</span> ';
+        var priceHtml = '';
+        if(p.prix_avant && p.prix_apres) priceHtml = '<div class="pc-promo-price"><s>'+p.prix_avant+' $</s>'+p.prix_apres+' $</div>';
+        inner += (reduHtml ? '<div style="margin-bottom:.5rem">'+reduHtml+'</div>' : '<span class="pc-promo-badge">Promo</span>');
+        inner += (p.emoji ? '<span class="pc-promo-emoji">'+p.emoji+'</span>' : '');
+        inner += '<div class="pc-promo-name">'+p.nom+'</div>';
+        inner += '<div class="pc-promo-desc">'+p.description+'</div>';
+        // Produits avec quantités et prix
+        if(p.produits && p.produits.length){
+          var prodsHtml='<div class="pc-promo-produits">';
+          var totalBase=0, totalPromo=0;
+          p.produits.forEach(function(line){
+            var lid=typeof line==='object'?String(line.id):String(line);
+            var lname=typeof line==='object'?(line.name||lid):lid;
+            var lemoji=typeof line==='object'?(line.emoji||'📦'):'📦';
+            var lqty=typeof line==='object'?(line.qty||1):1;
+            var lpriceUnit=typeof line==='object'?(line.price_unit||0):0;
+            var sub=lpriceUnit*lqty;
+            var subPromo=p.pct?sub*(1-p.pct/100):sub;
+            totalBase+=sub; totalPromo+=subPromo;
+            prodsHtml+='<div class="pc-promo-prod-line">'+
+              '<span class="pc-promo-prod-name">'+lemoji+' '+lname+'</span>'+
+              '<span class="pc-promo-prod-qty">× '+lqty+'</span>'+
+              (lpriceUnit?'<span class="pc-promo-prod-price">'+(p.pct?'<s>'+sub.toFixed(2)+'$</s> '+subPromo.toFixed(2):sub.toFixed(2))+'$</span>':'')
+            +'</div>';
+          });
+          if(totalBase>0){
+            prodsHtml+='<div class="pc-promo-total">Total : '+(p.pct?'<s>'+totalBase.toFixed(2)+'$</s> <strong>'+totalPromo.toFixed(2)+'$</strong>':'<strong>'+totalBase.toFixed(2)+'$</strong>')+'</div>';
+          }
+          prodsHtml+='</div>';
+          inner+=prodsHtml;
+        }
+        inner += priceHtml;
+        card.innerHTML += inner;
+        g.appendChild(card);
+      });
+    })
+    .catch(function(){ g.innerHTML = ''; if(gMob) gMob.innerHTML=''; });
+}
+
+function _renderPromoMobile(gMob, promos){
+  if(!gMob) return;
+  gMob.innerHTML = '';
+  promos.forEach(function(p, pi){
+    var card = document.createElement('div');
+    card.className = 'mob-promo-card';
+
+    if(p.image){
+      var img = document.createElement('img');
+      img.className = 'mob-promo-card-img';
+      img.src = p.image;
+      img.onerror = function(){ this.style.display='none'; };
+      card.appendChild(img);
+    }
+
+    var body = document.createElement('div');
+    body.className = 'mob-promo-card-body';
+
+    // Badges réductions
+    var reduHtml = '';
+    if(p.pct) reduHtml += '<span class="mob-promo-card-badge" style="color:#f5a623;border-color:rgba(200,120,30,.3);background:rgba(200,120,30,.1)">-'+p.pct+'%</span> ';
+    if(p.offert_qty&&p.offert_bonus) reduHtml += '<span class="mob-promo-card-badge" style="color:#82aaff;border-color:rgba(30,100,200,.3);background:rgba(30,100,200,.1)">'+p.offert_qty+' → '+p.offert_bonus+' offert</span>';
+    if(reduHtml) body.innerHTML += '<div class="mob-promo-reductions">'+reduHtml+'</div>';
+    else body.innerHTML += '<span class="mob-promo-card-badge">Promo</span>';
+
+    body.innerHTML += (p.emoji ? '<span style="font-size:1.4rem;display:block;margin-bottom:.3rem">'+p.emoji+'</span>' : '');
+    body.innerHTML += '<div class="mob-promo-card-name">'+p.nom+'</div>';
+    body.innerHTML += '<div class="mob-promo-card-desc">'+p.description+'</div>';
+
+    // Produits
+    if(p.produits && p.produits.length){
+      var totalBase=0, totalPromo=0;
+      var prodsHtml = '<div style="margin-top:.5rem">';
+      p.produits.forEach(function(line){
+        var lname=typeof line==='object'?(line.name||line.id):line;
+        var lemoji=typeof line==='object'?(line.emoji||'📦'):'📦';
+        var lqty=typeof line==='object'?(line.qty||1):1;
+        var lprice=typeof line==='object'?(line.price_unit||0):0;
+        var sub=lprice*lqty;
+        var subPromo=p.pct?sub*(1-p.pct/100):sub;
+        totalBase+=sub; totalPromo+=subPromo;
+        prodsHtml += '<div class="mob-promo-prod-line">'+
+          '<span class="mob-promo-prod-name">'+lemoji+' '+lname+'</span>'+
+          '<span class="mob-promo-prod-qty">× '+lqty+'</span>'+
+          (lprice?'<span class="mob-promo-prod-price">'+(p.pct?'<s>'+sub.toFixed(2)+'$</s> '+subPromo.toFixed(2):sub.toFixed(2))+'$</span>':'')+
+        '</div>';
+      });
+      if(totalBase>0){
+        prodsHtml += '<div class="mob-promo-total">Total : '+(p.pct?'<s>'+totalBase.toFixed(2)+'$</s> <strong>'+totalPromo.toFixed(2)+'$</strong>':'<strong>'+totalBase.toFixed(2)+'$</strong>')+'</div>';
+      }
+      prodsHtml += '</div>';
+      body.innerHTML += prodsHtml;
+    }
+
+    // Prix avant/après
+    if(p.prix_avant && p.prix_apres){
+      body.innerHTML += '<div class="mob-promo-price"><s>'+p.prix_avant+' $</s>'+p.prix_apres+' $</div>';
+    }
+
+    card.appendChild(body);
+    gMob.appendChild(card);
+  });
+}
+
+
+/* ── Typewriter titre ── */
+(function(){
+  var el = document.getElementById('tw-text');
+  var elMob = document.getElementById('mob-tw-text');
+  var cur = document.getElementById('hero-title') ? document.querySelector('#hero-title .tw-cursor') : document.querySelector('.tw-cursor');
+  var curMob = document.getElementById('mob-tw-cursor');
+  if(!el) return;
+  var text1 = 'LTD Sandy ';
+  var text2 = 'Shores';
+  var full = text1 + text2;
+  var i = 0;
+  function type(){
+    if(i <= full.length){
+      var t = full.substring(0,i);
+      var plain = t.length <= text1.length ? t : text1;
+      var gold = t.length > text1.length ? t.substring(text1.length) : '';
+      var rendered = plain + (gold ? '<span style="color:var(--gold)">'+gold+'</span>' : '');
+      el.innerHTML = rendered;
+      if(elMob) elMob.innerHTML = rendered;
+      i++;
+      setTimeout(type, i === 1 ? 500 : 85 + Math.random()*35);
+    } else {
+      setTimeout(function(){
+        if(cur) cur.style.display='none';
+        if(curMob) curMob.style.display='none';
+      }, 1200);
+    }
+  }
+  setTimeout(type, 300);
+})();
+
+/* ── Embers (braises animées) ── */
+(function(){
+  var starsEl = document.getElementById('stars');
+  if(!starsEl) return;
+  var parent = starsEl.parentElement;
+  for(var i=0; i<16; i++){
+    var e = document.createElement('div');
+    e.className = 'ember';
+    var sz = Math.random()*2.5 + 1;
+    var tx = (Math.random()-0.5)*100;
+    var tx2 = tx + (Math.random()-0.5)*50;
+    e.style.cssText = 'width:'+sz+'px;height:'+sz+'px;'
+      +'left:'+Math.random()*100+'%;bottom:'+(Math.random()*20)+'%;'
+      +'--dur:'+(10+Math.random()*12)+'s;--del:'+(Math.random()*10)+'s;'
+      +'--ty:-'+(180+Math.random()*250)+'px;--tx:'+tx+'px;--tx2:'+tx2+'px';
+    parent.appendChild(e);
+  }
+})();
+
+/* ── BANDEAU VENDEURS EN SERVICE ── */
+(function initServiceBanner(){
+  var POLL_INTERVAL = 30000; // 30s
+  var banner = null;
+
+  function initials(prenom, nom){
+    var p = (prenom||'').trim()[0]||'';
+    var n = (nom||'').trim()[0]||'';
+    return (p+n).toUpperCase();
+  }
+
+  // Stocker les vendeurs en service pour le modal
+  var _vendeursList = [];
+
+  function renderBanner(vendeurs){
+    if(!banner) banner = document.getElementById('service-banner');
+    if(!banner) return;
+    var inner = document.getElementById('sb-inner');
+    if(!inner) return;
+    _vendeursList = vendeurs || [];
+
+    if(!vendeurs || !vendeurs.length){
+      inner.innerHTML = '<span class="sb-none">Aucun vendeur disponible pour le moment</span>';
+      banner.classList.add('visible');
+      return;
+    }
+
+    inner.innerHTML = '';
+    vendeurs.forEach(function(v, idx){
+      var ini = initials(v.prenom, v.nom);
+      var nom = (v.prenom||'')+' '+(v.nom||'').charAt(0)+'.';
+      var sta = v.station || '';
+
+      var card = document.createElement('div');
+      card.className = 'sb-vendeur';
+      card.title = 'Voir le profil';
+      card.setAttribute('data-idx', idx);
+      card.onclick = function(){ openVendeurModal(idx); };
+
+      // Avatar image si disponible, sinon initiales
+      var avatarHtml;
+      if(v.avatar_url){
+        avatarHtml = '<img src="'+v.avatar_url+'" style="width:22px;height:22px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(200,169,76,.4);flex-shrink:0" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\'" alt="">'
+          + '<div class="sb-avatar" style="display:none">'+ini+'</div>';
+      } else {
+        avatarHtml = '<div class="sb-avatar">'+ini+'</div>';
+      }
+
+      card.innerHTML = avatarHtml
+        + '<div class="sb-info">'
+        + '<div class="sb-nom">'+nom+'</div>'
+        + (sta ? '<div class="sb-station">'+sta+'</div>' : '')
+        + '</div>';
+      inner.appendChild(card);
+    });
+    banner.classList.add('visible');
+  }
+
+  function fetchService(){
+    fetch('api.php?action=get_service_actif')
+      .then(function(r){ return r.json(); })
+      .then(function(res){ renderBanner(res.success ? res.vendeurs : []); })
+      .catch(function(){ renderBanner([]); });
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    fetchService();
+    setInterval(fetchService, POLL_INTERVAL);
+  });
+})();
+
+/* ── MODAL VENDEUR ── */
+function openVendeurModal(idx){
+  var v = (typeof idx === 'number') ? _vendeursList[idx] : idx;
+  if(!v) return;
+  var overlay = document.getElementById('vend-detail-modal');
+  if(!overlay) return;
+
+  // Avatar
+  var wrap = document.getElementById('vend-modal-avatar-wrap');
+  if(wrap){
+    if(v.avatar_url){
+      wrap.innerHTML = '<img class="vend-modal-avatar" src="'+v.avatar_url+'" alt="" onerror="this.outerHTML=\'<div class=\\\"vend-modal-avatar-ph\\\">'+initials(v.prenom,v.nom)+'</div>\'">';
+    } else {
+      wrap.innerHTML = '<div class="vend-modal-avatar-ph">'+initials(v.prenom,v.nom)+'</div>';
+    }
+  }
+
+  // Nom et poste
+  var nom = document.getElementById('vend-modal-name');
+  var poste = document.getElementById('vend-modal-poste');
+  if(nom)   nom.textContent   = (v.prenom||'')+' '+(v.nom||'');
+  if(poste) poste.textContent = v.poste||'';
+
+  // Bio
+  var bioEl = document.getElementById('vend-modal-bio');
+  if(bioEl){
+    if(v.bio){ bioEl.textContent = v.bio; bioEl.style.display='block'; }
+    else { bioEl.style.display='none'; }
+  }
+
+  // Station
+  var staEl = document.getElementById('vend-modal-station');
+  if(staEl) staEl.textContent = v.station || 'LTD Sandy Shores';
+
+  // Depuis quand
+  var depEl = document.getElementById('vend-modal-depuis');
+  if(depEl && v.debut){
+    var debut = new Date((v.debut||'').replace(' ','T'));
+    var diff  = Math.floor((Date.now() - debut.getTime()) / 60000);
+    var h = Math.floor(diff/60), m = diff%60;
+    depEl.textContent = h > 0 ? h+'h '+String(m).padStart(2,'0')+'min' : m+'min';
+  }
+
+  // Téléphone
+  var telEl = document.getElementById('vend-modal-tel');
+  if(telEl) telEl.textContent = v.telephone ? '📞 '+v.telephone : '—';
+
+  overlay.classList.add('open');
+}
+
+function closeVendeurModal(){
+  var overlay = document.getElementById('vend-detail-modal');
+  if(overlay) overlay.classList.remove('open');
+}
+
+function initials(prenom, nom){
+  return ((prenom||'')[0]||'').toUpperCase()+((nom||'')[0]||'').toUpperCase();
+}
+
+</script>
+<div id="page-transition"><div class="pt-inner"><img class="pt-logo" src="https://i.postimg.cc/44zrq5pG/ltdss.jpg" alt="LTD"><div class="pt-bar"></div></div></div>
+
+<!-- BANDEAU SERVICE LIVE -->
+<div id="service-banner">
+  <div class="sb-dot"></div>
+  <div class="sb-label">EN SERVICE</div>
+  <div class="sb-vendeurs" id="sb-inner"></div>
+</div>
+</body>
+</html>

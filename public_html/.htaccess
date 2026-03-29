@@ -1,0 +1,24 @@
+# LTD Sandy Shores — .htaccess
+# Placer à la RACINE de public_html ou dans le sous-dossier ltdsandy/
+# RENOMMER ce fichier en .htaccess après upload
+
+# Page d'accueil = accueil.html
+DirectoryIndex accueil.html index.php index.html
+
+# Désactiver réécriture WordPress (cause du HTTP 500)
+<IfModule mod_rewrite.c>
+  RewriteEngine Off
+</IfModule>
+
+# Headers CORS pour api.php
+<IfModule mod_headers.c>
+  Header set Access-Control-Allow-Origin "*"
+  Header set Access-Control-Allow-Methods "GET, POST, OPTIONS"
+  Header set Access-Control-Allow-Headers "Content-Type, X-API-Secret"
+</IfModule>
+
+# Protéger config.php
+<Files "config.php">
+  Order allow,deny
+  Deny from all
+</Files>

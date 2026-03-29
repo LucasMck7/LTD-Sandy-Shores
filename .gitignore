@@ -1,0 +1,25 @@
+# ============================================================
+#  .gitignore — LTD Sandy Shores
+# ============================================================
+
+# Credentials & env
+bot/.env
+public_html/config.php
+public_html/.private/
+
+# Node modules
+bot/node_modules/
+node_modules/
+
+# Zips originaux (remplacés par les vrais fichiers)
+*.zip
+extracted_public_html/
+extracted_root/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
