@@ -3141,6 +3141,192 @@ async function loadFinances() {
   } catch(err) { console.error('loadFinances:', err); }
 }
 
+/* ══ STATIONS (fonctions manquantes) ══ */
+var editStaIdx = -1;
+
+async function loadStations() {
+  var g = $('sta-grid');
+  if (g) g.innerHTML = '<div style="color:var(--td);padding:1rem">Chargement...</div>';
+  try {
+    var r = await apifetch('admin_get_stations', null, true);
+    if (r.stations) STATIONS = r.stations;
+    renderStations(STATIONS);
+    var sel = $('ess-hist-station');
+    if (sel) {
+      sel.innerHTML = '<option value="">Toutes les stations</option>'
+        + STATIONS.map(function(s){ return '<option value="'+h(s.id)+'">'+h(s.nom)+'</option>'; }).join('');
+    }
+  } catch(e) {
+    if (g) g.innerHTML = '<div style="color:var(--td);padding:1rem">Erreur chargement stations</div>';
+  }
+}
+
+function renderStations(arr) {
+  var g = $('sta-grid'); if (!g) return;
+  g.innerHTML = '';
+  if (!arr || !arr.length) { g.innerHTML = '<div style="color:var(--td);padding:1rem">Aucune station</div>'; return; }
+  arr.forEach(function(s, i) {
+    var pct = s.volume_max > 0 ? Math.round(s.volume_actuel / s.volume_max * 100) : 0;
+    var pctCls = pct >= 60 ? 'sta-pct-ok' : pct >= 30 ? 'sta-pct-mid' : 'sta-pct-low';
+    var c = document.createElement('div'); c.className = 'card';
+    c.innerHTML = '<div class="card-head"><div>'
+      + '<div class="card-name">⛽ ' + h(s.nom) + '</div>'
+      + '<div class="card-sub"><span class="pill ' + pctCls + '">' + pct + '% — ' + (s.volume_actuel||0) + ' / ' + (s.volume_max||0) + ' L</span></div>'
+      + '</div></div>'
+      + '<div class="card-body">'
+      + '<div>💲 Prix vente : <strong>' + (s.prix_vente||0) + ' $/L</strong></div>'
+      + '<div>🏷 Prix achat : <strong>' + (s.prix_achat||0) + ' $/L</strong></div>'
+      + (s.dernier_rav ? '<div style="font-size:.7rem;color:var(--td)">Dernier rav. : ' + h(s.dernier_rav) + '</div>' : '')
+      + '</div>'
+      + '<div class="card-footer">'
+      + '<button class="btn-act" onclick="openStaForm('+i+')">✏ Modifier</button>'
+      + '<button class="btn-act btn-act-r" onclick="deleteSta('+i+')">✕ Supprimer</button>'
+      + '</div>';
+    g.appendChild(c);
+  });
+}
+
+function openStaForm(idx) {
+  editStaIdx = idx;
+  var t = $('sta-modal-title'); if (t) t.textContent = idx >= 0 ? 'Modifier station' : 'Nouvelle station';
+  var s = idx >= 0 ? STATIONS[idx] : {};
+  if ($('sf-n'))     $('sf-n').value     = s.nom       || '';
+  if ($('sf-vm'))    $('sf-vm').value    = s.volume_max || 5000;
+  if ($('sf-pv'))    $('sf-pv').value    = s.prix_vente || 1.5;
+  if ($('sf-pa'))    $('sf-pa').value    = s.prix_achat || 1.0;
+  if ($('sf-photo')) $('sf-photo').value = s.photo_url  || '';
+  var m = $('frm-sta'); if (m) m.classList.add('open');
+}
+
+async function saveSta() {
+  var nom = ($('sf-n')||{value:''}).value.trim();
+  if (!nom) { toast('Requis', 'Le nom est obligatoire', 'error'); return; }
+  var data = {
+    nom:        nom,
+    volume_max: parseFloat(($('sf-vm')||{value:5000}).value) || 5000,
+    prix_vente: parseFloat(($('sf-pv')||{value:1.5}).value)  || 1.5,
+    prix_achat: parseFloat(($('sf-pa')||{value:1.0}).value)  || 1.0,
+    photo_url:  ($('sf-photo')||{value:''}).value.trim(),
+  };
+  if (editStaIdx >= 0) data.id = STATIONS[editStaIdx].id;
+  try {
+    await apifetch('admin_save_station', data, true);
+    toast('Sauvegardé', '', 'success');
+    closeModal('frm-sta');
+    loadStations();
+  } catch(e) { toast('Erreur', ''+e, 'error'); }
+}
+
+async function deleteSta(idx) {
+  if (!confirm('Supprimer cette station ?')) return;
+  try {
+    await apifetch('admin_delete_station', { id: STATIONS[idx].id }, true);
+    toast('Supprimé', '', 'success');
+    loadStations();
+  } catch(e) { toast('Erreur', ''+e, 'error'); }
+}
+
+/* ══ ENTREPRISES — SOUS-ONGLETS ══ */
+function showCoSub(sub, btn) {
+  document.querySelectorAll('#tab-companies .stab').forEach(function(b){ b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  document.querySelectorAll('#tab-companies .sub-panel').forEach(function(p){ p.classList.remove('active'); });
+  var target = document.getElementById('co-sub-' + sub);
+  if (target) target.classList.add('active');
+  if (sub === 'ranking')  renderCoRanking();
+  if (sub === 'history')  { renderCoHistory(); populateCoHistFilter(); }
+  if (sub === 'annuaire') loadAnnuaire();
+}
+
+function renderCoRanking() {
+  var g = $('co-ranking-full'); if (!g) return;
+  var ca = {};
+  ORDERS.forEach(function(o) {
+    var coName = o.company || o.entreprise || o.company_name;
+    if (!coName) return;
+    ca[coName] = (ca[coName] || 0) + parseFloat(o.total || 0);
+  });
+  var sorted = Object.entries(ca).sort(function(a,b){ return b[1]-a[1]; });
+  if (!sorted.length) { g.innerHTML = '<div style="color:var(--td);font-size:.75rem;padding:.5rem">Aucune commande entreprise</div>'; return; }
+  var medals = ['🥇','🥈','🥉'];
+  g.innerHTML = '';
+  sorted.forEach(function(e, i) {
+    g.innerHTML += '<div style="display:flex;align-items:center;gap:.75rem;background:rgba(0,0,0,.2);border:1px solid rgba(160,120,32,.1);border-radius:5px;padding:.4rem .8rem;margin-bottom:.3rem">'
+      + '<span style="font-size:1rem">' + (medals[i] || '#'+(i+1)) + '</span>'
+      + '<div style="flex:1;font-weight:500;color:var(--or)">' + h(e[0]) + '</div>'
+      + '<div style="font-size:.72rem;color:#4ade80">' + e[1].toFixed(2) + ' $</div>'
+      + '</div>';
+  });
+}
+
+function populateCoHistFilter() {
+  var sel = $('co-hist-filter'); if (!sel) return;
+  var names = [...new Set(ORDERS.filter(function(o){ return !!(o.company||o.entreprise||o.company_name); })
+    .map(function(o){ return o.company||o.entreprise||o.company_name; }))].sort();
+  sel.innerHTML = '<option value="">Toutes les entreprises</option>'
+    + names.map(function(n){ return '<option value="'+h(n)+'">'+h(n)+'</option>'; }).join('');
+}
+
+function renderCoHistory() {
+  var tb = $('co-hist-body'); if (!tb) return;
+  var filter = ($('co-hist-filter')||{value:''}).value;
+  var rows = ORDERS.filter(function(o){
+    if (!(o.company||o.entreprise||o.company_name)) return false;
+    if (filter) return (o.company||o.entreprise||o.company_name) === filter;
+    return true;
+  });
+  if (!rows.length) { tb.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--td);padding:1.5rem">Aucune commande</td></tr>'; return; }
+  tb.innerHTML = rows.map(function(o) {
+    var coName = o.company||o.entreprise||o.company_name||'—';
+    var items = (o.items||[]).map(function(it){ return (it.emoji||'')+' '+(it.name||it.nom||'?')+' x'+(it.qty||1); }).join(', ');
+    var st = o.status||o.statut||'pending';
+    var pillCls = st==='delivered'||st==='livree' ? 'pill-g' : st==='pending' ? 'pill-y' : 'pill-or';
+    return '<tr>'
+      + '<td><code style="font-size:.7rem">'+h(o.ref||o.id||'—')+'</code></td>'
+      + '<td>'+h(coName)+'</td>'
+      + '<td style="font-size:.72rem;color:var(--td)">'+h((o.date_commande||o.date||'').substring(0,10))+'</td>'
+      + '<td style="font-size:.72rem">'+h(items)+'</td>'
+      + '<td><strong>'+parseFloat(o.total||0).toFixed(2)+' $</strong></td>'
+      + '<td><span class="pill '+pillCls+'">'+h(st)+'</span></td>'
+      + '<td><button class="btn-act" onclick="openOrderModal('+JSON.stringify(o.id||o.ref)+')">👁</button></td>'
+      + '</tr>';
+  }).join('');
+}
+
+/* ══ PROMOTIONS — FONCTIONS MANQUANTES ══ */
+function _buildProduitsCheckboxes(selectedProduits) {
+  var wrap = $('prf-produits-wrap'); if (!wrap) return;
+  var allProds = PROD_PART.concat(PROD_ENT);
+  wrap.innerHTML = '';
+  if (!allProds.length) {
+    wrap.innerHTML = '<div style="color:var(--td);font-size:.75rem;padding:.3rem">Aucun produit dans le catalogue</div>';
+    return;
+  }
+  allProds.forEach(function(p) {
+    var pid = String(p.id);
+    var sel = selectedProduits.find(function(s){ return String(s.id||s) === pid; });
+    var selQty = sel ? (sel.qty || 1) : 1;
+    var row = document.createElement('label');
+    row.style.cssText = 'display:flex;align-items:center;gap:.5rem;padding:.3rem .4rem;border-radius:4px;cursor:pointer;font-size:.75rem;color:var(--cr)';
+    row.innerHTML = '<input type="checkbox" class="prf-prod-cb" value="'+pid+'" style="accent-color:var(--orb)"'+(sel?' checked':'')+'>'
+      + '<span style="flex:1">'+h(p.emoji||'')+' '+h(p.name)+'</span>'
+      + '<span style="color:var(--td);font-size:.65rem">'+(p.price||0)+'$</span>'
+      + '<input type="number" class="prf-prod-qty" data-pid="'+pid+'" data-price="'+(p.price||0)+'" min="1" value="'+selQty+'" style="width:50px;background:rgba(0,0,0,.4);border:1px solid rgba(160,120,32,.2);border-radius:3px;color:var(--cr);padding:.2rem .4rem;font-size:.72rem">';
+    wrap.appendChild(row);
+  });
+}
+
+function _initPromoTypeListeners() {
+  ['pct','offert','prix'].forEach(function(type) {
+    var cb = $('prf-type-'+type);
+    if (!cb) return;
+    cb.onchange = function() {
+      var bloc = $('prf-bloc-'+type);
+      if (bloc) bloc.style.display = this.checked ? 'grid' : 'none';
+    };
+  });
+}
+
 </script>
 
 
